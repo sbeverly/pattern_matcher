@@ -4,23 +4,55 @@ class PatternMatcher
 	def initialize(file)
 		@file_path = file
 		@pattern_hash = Hash.new
+		@first_path_row = nil
 
 		build_main_hash
 		sort_hash
 	end
 
 
-
 	public
 
 
 	def find_matches
+		counter = 0
+		IO.foreach(@file_path) do |path|
+			if counter > @first_path_row
+				pattern = get_best_pattern(path.chomp)
+				pattern ? puts("#{pattern}") : puts("NO MATCH")
+			end
+			counter += 1
+		end
 	end
 
+	def get_best_pattern(path)
+		path_array = path.split("/")
+		path_array.shift if path_array.first == ""
+		path_array.pop if path_array.last == ""
+		element_count = path_array.length
+		
+		possible_matches = @pattern_hash[element_count]
+
+		if possible_matches
+			possible_matches.find { |pattern| is_match(path_array, pattern) }
+		else
+			return false
+		end
+	end
 
 
 	private
 
+	def is_match(path_array, pattern)
+		pattern = pattern.split(",")
+		path_array.each_with_index do |chr, index|
+			next if pattern[index] == "*"
+			next if chr == pattern[index]
+			return false
+		end
+
+		return true
+	end
 
 	def build_main_hash
 		counter = 0
@@ -33,6 +65,8 @@ class PatternMatcher
 			add_pattern_to_hash(line.chomp)
 			counter += 1
 		end
+
+		@first_path_row = no_of_patterns + 1
 	end
 
 	def add_pattern_to_hash(pattern)
@@ -69,7 +103,6 @@ class PatternMatcher
 			
 			@pattern_hash[key] = no_wildcards.concat(single_asterik_order).concat(multiple_asterik_order)
 		end
-		puts @pattern_hash
 	end
 
 	def resolve_multiple_wildcard_order(array)
@@ -110,4 +143,4 @@ class PatternMatcher
 	end
 end
 
-puts Benchmark.measure { PatternMatcher.new(ARGV[0]).find_matches }
+PatternMatcher.new(ARGV[0]).find_matches
