@@ -1,5 +1,3 @@
-require 'benchmark'
-
 =begin
 
 This class is designed to pull in all possible patterns into memory and sort them by the 'best possible match' rules.  Finding a matching pattern is done
